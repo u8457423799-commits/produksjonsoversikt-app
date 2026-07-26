@@ -163,6 +163,9 @@ function summarize(data) {
     totalOrders: data.length,
     doneOrders: data.filter((row) => row.isDone).length,
     activeOrders: data.filter((row) => row.Status === "StartedUp").length,
+    totalPlanned: sum(data, "planned"),
+    totalDone: sum(data, "done"),
+    totalRemaining: sum(data, "remaining"),
     fvPlanned: sum(fv, "planned"),
     fvDone: sum(fv, "done"),
     fvRemaining: sum(fv, "remaining"),
@@ -179,21 +182,22 @@ function progressColor(value) {
   return "#52d273";
 }
 
-function summaryCard(label, value, detail, progress, tone = "") {
+function summaryCard(label, value, detail, progress, tone = "", valueClass = "") {
   const color = progressColor(progress);
   return `
     <article class="summary-card ${tone}">
       <p>${escapeHtml(label)}</p>
-      <strong>${escapeHtml(value)}</strong>
+      <strong class="${valueClass}">${escapeHtml(value)}</strong>
       <span>${escapeHtml(detail)}</span>
       <div class="progress-track"><i style="width:${Math.min(progress, 100)}%;background:${color}"></i></div>
     </article>`;
 }
 
 function renderSummary(summary) {
-  const fvProgress = percentage(summary.fvDone, summary.fvPlanned);
-  const hfProgress = percentage(summary.hfDone, summary.hfPlanned);
+  const fvProgress = Math.min(100, percentage(summary.fvDone, summary.fvPlanned));
+  const hfProgress = Math.min(100, percentage(summary.hfDone, summary.hfPlanned));
   const orderProgress = percentage(summary.doneOrders, summary.totalOrders);
+  const totalProgress = Math.min(100, percentage(summary.totalDone, summary.totalPlanned));
   els.summaryGrid.innerHTML = [
     summaryCard(
       "Plan FV",
@@ -208,6 +212,7 @@ function renderSummary(summary) {
       `Gjenstår ${formatNumber(summary.fvRemaining)} stk`,
       fvProgress,
       "tone-fv",
+      "value-good",
     ),
     summaryCard(
       "Plan HF",
@@ -222,12 +227,21 @@ function renderSummary(summary) {
       `Gjenstår ${formatNumber(summary.hfRemaining)} kg`,
       hfProgress,
       "tone-hf",
+      "value-good",
     ),
     summaryCard(
       "Ordrestatus",
       `${summary.doneOrders} / ${summary.totalOrders}`,
       `${summary.activeOrders} pågår`,
       orderProgress,
+    ),
+    summaryCard(
+      "Speedometer total",
+      `${totalProgress}%`,
+      "BI Tranby totalt",
+      totalProgress,
+      "",
+      "value-good",
     ),
   ].join("");
 }
@@ -260,34 +274,71 @@ function calculateEta(planned, done) {
   };
 }
 
+function makeGauge(progress, color) {
+  const clamped = Math.max(0, Math.min(100, progress));
+  const radius = 58;
+  const centerX = 76;
+  const centerY = 70;
+  const start = -Math.PI;
+  const end = start + Math.PI * (clamped / 100);
+  const x = centerX + radius * Math.cos(end);
+  const y = centerY + radius * Math.sin(end);
+  const largeArc = clamped > 50 ? 1 : 0;
+  return `
+    <svg class="gauge" viewBox="0 0 152 84" role="img" aria-label="${progress} prosent ferdig">
+      <path d="M18 70 A58 58 0 0 1 134 70" fill="none" stroke="#252a34" stroke-width="13" stroke-linecap="round"/>
+      ${
+        clamped > 0
+          ? `<path d="M18 70 A58 58 0 ${largeArc} 1 ${x.toFixed(2)} ${y.toFixed(
+              2,
+            )}" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/>`
+          : ""
+      }
+      <line x1="${centerX}" y1="${centerY}" x2="${x.toFixed(2)}" y2="${y.toFixed(
+        2,
+      )}" stroke="#ecebe7" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${centerX}" cy="${centerY}" r="5" fill="#ecebe7"/>
+    </svg>`;
+}
+
 function renderProgress(summary) {
   const daily = summary.groups.Dagligvare || { planned: 0, done: 0 };
   const kitchen = summary.groups.Storkjøkken || { planned: 0, done: 0 };
-  const eta = calculateEta(daily.planned + kitchen.planned, daily.done + kitchen.done);
+  const finishedPlanned = daily.planned + kitchen.planned;
+  const finishedDone = daily.done + kitchen.done;
+  const eta = calculateEta(finishedPlanned, finishedDone);
   els.etaCard.innerHTML = `
-    <p class="eyebrow">Ferdigvare · DV + SK</p>
+    <p class="eta-title">Ferdigvare (DV + SK)</p>
+    <div class="eta-totals">
+      <span><small>Plan totalt</small><strong>${formatNumber(finishedPlanned)} <i>stk</i></strong></span>
+      <span><small>Gjenstår</small><strong class="text-danger">${formatNumber(eta.remaining)} <i>stk</i></strong></span>
+    </div>
     <h2>${escapeHtml(eta.eta)}</h2>
     <div class="eta-stats">
-      <span><small>Status</small><strong class="${eta.status === "Bak plan" ? "text-danger" : "text-good"}">${escapeHtml(eta.status)}</strong></span>
-      <span><small>Gjenstår</small><strong>${formatNumber(eta.remaining)}</strong></span>
+      <span><small>Status</small><strong class="${eta.status === "Bak plan" ? "text-danger" : "eta-status"}">${escapeHtml(
+        eta.status,
+      )}</strong></span>
       <span><small>Takt/time nå</small><strong>${formatNumber(eta.rate)}</strong></span>
       <span><small>Behov takt/time</small><strong>${formatNumber(eta.neededRate)}</strong></span>
     </div>`;
 
-  els.groupGrid.innerHTML = Object.entries(GROUP_META)
-    .map(([name, meta]) => {
+  const gaugeGroups = ["Dagligvare", "Storkjøkken", "Beger", "HF Trim", "HF Kuttetorg"];
+  els.groupGrid.innerHTML = gaugeGroups
+    .map((name) => {
+      const meta = GROUP_META[name];
       const group = summary.groups[name] || { planned: 0, done: 0, remaining: 0 };
       const progress = percentage(group.done, group.planned);
       const unit = name.startsWith("HF") ? "kg" : "stk";
       return `
         <article class="group-card" style="--group-color:${meta.color};--group-background:${meta.background}">
-          <div class="group-heading">
-            <h3>${escapeHtml(name)}</h3>
-            <strong>${progress}%</strong>
+          <h3>${escapeHtml(name)}</h3>
+          ${makeGauge(progress, meta.color)}
+          <strong class="gauge-value">${progress}%</strong>
+          <p>${formatNumber(group.done)} / ${formatNumber(group.planned)} ${unit}</p>
+          <div class="gauge-numbers">
+            <span><b class="text-good">${formatNumber(group.done)}</b>Ferdig</span>
+            <span><b class="text-danger">${formatNumber(group.remaining)}</b>Gjenstår</span>
           </div>
-          <div class="progress-track"><i style="width:${Math.min(progress, 100)}%"></i></div>
-          <p>${formatNumber(group.done)} av ${formatNumber(group.planned)} ${unit}</p>
-          <div><span>Ferdig <b>${formatNumber(group.done)}</b></span><span>Gjenstår <b>${formatNumber(group.remaining)}</b></span></div>
         </article>`;
     })
     .join("");
