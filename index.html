@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0f14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Produksjon" />
+    <meta name="description" content="Intern produksjonsoversikt for ansatte." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <title>Produksjonsoversikt</title>
+  </head>
+  <body>
+    <main id="loginView" class="login-shell">
+      <section class="login-card" aria-labelledby="loginTitle">
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <p class="eyebrow">Intern produksjonsapp</p>
+        <h1 id="loginTitle">Produksjonsoversikt</h1>
+        <p class="login-copy">
+          Logg inn med Microsoft-jobbkontoen din for å se dagens produksjon.
+        </p>
+        <button id="loginButton" class="primary-button" type="button">
+          Logg inn med Microsoft
+        </button>
+        <p id="loginMessage" class="login-message" role="status"></p>
+      </section>
+    </main>
+
+    <main id="appView" class="app-shell" hidden>
+      <header class="topbar">
+        <div class="topbar-title">
+          <div class="brand-mark brand-mark-small" aria-hidden="true">P</div>
+          <div>
+            <p class="eyebrow">Intern produksjonsapp</p>
+            <h1>Produksjonsoversikt</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="live"><span class="live-dot"></span><span>Live</span></div>
+          <span id="clock" class="clock">--:--:--</span>
+          <button id="refreshButton" class="icon-button" type="button" aria-label="Oppdater data">
+            ↻
+          </button>
+          <button id="accountButton" class="account-button" type="button" aria-expanded="false">
+            <span id="accountInitials">–</span>
+          </button>
+          <div id="accountMenu" class="account-menu" hidden>
+            <strong id="accountName"></strong>
+            <span id="accountEmail"></span>
+            <button id="logoutButton" type="button">Logg ut</button>
+          </div>
+        </div>
+      </header>
+
+      <section id="statusBanner" class="status-banner" role="status">
+        <span id="statusText">Henter produksjonsdata …</span>
+        <span id="lastUpdated"></span>
+      </section>
+
+      <section id="summaryGrid" class="summary-grid" aria-label="Produksjonssammendrag"></section>
+
+      <section class="progress-section">
+        <article id="etaCard" class="panel eta-card"></article>
+        <div id="groupGrid" class="group-grid"></div>
+      </section>
+
+      <section class="panel orders-panel">
+        <div class="orders-heading">
+          <div>
+            <p class="eyebrow">Dagens ordre</p>
+            <h2>Produksjonsstatus</h2>
+          </div>
+          <label class="search">
+            <span class="sr-only">Søk</span>
+            <input id="searchInput" type="search" placeholder="Søk produkt, vare- eller ordrenummer" />
+          </label>
+        </div>
+        <div id="filterBar" class="filter-bar" aria-label="Filtrer produksjonsordre"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produktnavn</th>
+                <th>Varenr.</th>
+                <th>Gruppe</th>
+                <th>Status</th>
+                <th>Planlagt</th>
+                <th>Ferdigmeldt</th>
+                <th>Gjenstår</th>
+                <th>Prosent</th>
+                <th>Levering</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <p id="emptyMessage" class="empty-message" hidden>Ingen ordre passer med filteret.</p>
+      </section>
+    </main>
+
+    <noscript>Denne appen krever JavaScript.</noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
