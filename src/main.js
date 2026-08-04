@@ -120,6 +120,12 @@ function statusClass(status) {
   return "status-neutral";
 }
 
+function percentClass(value) {
+  if (value === 100) return "percent-complete";
+  if (value > 100) return "percent-over";
+  return "percent-under";
+}
+
 function processData(raw) {
   if (!Array.isArray(raw)) throw new Error("JSON-filen har ikke forventet format.");
   return raw
@@ -384,6 +390,7 @@ function renderOrders() {
   els.ordersBody.innerHTML = rows
     .map((row) => {
       const meta = GROUP_META[row.Prod_group] || { color: "#a8a8a8", background: "#232630" };
+      const hasProgress = row.planned > 0 && row.done > 0;
       return `
         <tr class="${row.isDone ? "completed-row" : ""}">
           <td data-label="Produkt">${escapeHtml(row.Order_name || "—")}<small>Ordre ${escapeHtml(row.Order_nr || "—")}</small></td>
@@ -397,7 +404,9 @@ function renderOrders() {
           <td data-label="Planlagt">${formatNumber(row.planned)}</td>
           <td data-label="Ferdigmeldt" class="text-good">${row.done ? formatNumber(row.done) : "—"}</td>
           <td data-label="Gjenstår">${row.remaining ? formatNumber(row.remaining) : "—"}</td>
-          <td data-label="Prosent"><strong>${row.progress ? `${row.progress}%` : "—"}</strong></td>
+          <td data-label="Prosent"><strong class="${
+            hasProgress ? percentClass(row.progress) : ""
+          }">${hasProgress ? `${row.progress}%` : "—"}</strong></td>
           <td data-label="Levering">${formatDate(row.Date_delivery)}</td>
         </tr>`;
     })
