@@ -283,13 +283,12 @@ function makeGauge(progress, color) {
   const end = start + Math.PI * (clamped / 100);
   const x = centerX + radius * Math.cos(end);
   const y = centerY + radius * Math.sin(end);
-  const largeArc = clamped > 50 ? 1 : 0;
   return `
     <svg class="gauge" viewBox="0 0 152 84" role="img" aria-label="${progress} prosent ferdig">
       <path d="M18 70 A58 58 0 0 1 134 70" fill="none" stroke="#252a34" stroke-width="13" stroke-linecap="round"/>
       ${
         clamped > 0
-          ? `<path d="M18 70 A58 58 0 ${largeArc} 1 ${x.toFixed(2)} ${y.toFixed(
+          ? `<path d="M18 70 A58 58 0 0 1 ${x.toFixed(2)} ${y.toFixed(
               2,
             )}" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/>`
           : ""
