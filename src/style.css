@@ -680,6 +680,18 @@ td:first-child small {
   color: #ef7979;
 }
 
+.percent-under {
+  color: #f6c453;
+}
+
+.percent-complete {
+  color: #63d77f;
+}
+
+.percent-over {
+  color: #69c7ff;
+}
+
 .empty-message {
   padding: 28px;
   color: #87909f;
