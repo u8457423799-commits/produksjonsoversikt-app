@@ -460,9 +460,11 @@ async function fetchSharePointData() {
     .split("/")
     .map((part) => encodeURIComponent(part))
     .join("/");
+  const driveUrl =
+    `https://graph.microsoft.com/v1.0/sites/${encodeURIComponent(CONFIG.siteId)}/drive`;
   const metadataUrl =
-    `https://graph.microsoft.com/v1.0/sites/${encodeURIComponent(CONFIG.siteId)}` +
-    `/drive/root:/${encodedPath}?$select=id,name,lastModifiedDateTime,@microsoft.graph.downloadUrl`;
+    `${driveUrl}/root:/${encodedPath}` +
+    `?select=id,name,lastModifiedDateTime,@microsoft.graph.downloadUrl`;
   const metadataResponse = await fetch(metadataUrl, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
@@ -472,7 +474,30 @@ async function fetchSharePointData() {
     throw new Error(details?.error?.message || `Microsoft Graph svarte ${metadataResponse.status}.`);
   }
   const metadata = await metadataResponse.json();
-  const downloadUrl = metadata["@microsoft.graph.downloadUrl"];
+  let downloadUrl = metadata["@microsoft.graph.downloadUrl"];
+
+  // Enkelte SharePoint-svar utelater nedlastingsadressen ved stioppslag.
+  // Hent den da direkte fra fil-ID-en med formatet Microsoft anbefaler for SPA-er.
+  if (!downloadUrl && metadata.id) {
+    const downloadMetadataResponse = await fetch(
+      `${driveUrl}/items/${encodeURIComponent(metadata.id)}` +
+        `?select=id,@microsoft.graph.downloadUrl`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      },
+    );
+    if (!downloadMetadataResponse.ok) {
+      const details = await downloadMetadataResponse.json().catch(() => null);
+      throw new Error(
+        details?.error?.message ||
+          `Microsoft Graph svarte ${downloadMetadataResponse.status} ved nedlasting.`,
+      );
+    }
+    const downloadMetadata = await downloadMetadataResponse.json();
+    downloadUrl = downloadMetadata["@microsoft.graph.downloadUrl"];
+  }
+
   if (!downloadUrl) throw new Error("SharePoint returnerte ingen nedlastingsadresse.");
   const dataResponse = await fetch(downloadUrl, { cache: "no-store" });
   if (!dataResponse.ok) throw new Error(`Kunne ikke laste produksjonsfilen (${dataResponse.status}).`);
