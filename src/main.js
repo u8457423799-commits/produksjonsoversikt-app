@@ -441,7 +441,7 @@ function setStatus(message, type = "loading") {
 }
 
 async function getAccessToken() {
-  const request = { scopes: ["Files.Read"], account: activeAccount };
+  const request = { scopes: ["Files.Read.All"], account: activeAccount };
   try {
     return (await msal.acquireTokenSilent(request)).accessToken;
   } catch (error) {
@@ -505,7 +505,10 @@ async function signIn() {
   els.loginButton.disabled = true;
   els.loginMessage.textContent = "Åpner sikker Microsoft-innlogging …";
   try {
-    await msal.loginRedirect({ scopes: ["User.Read", "Files.Read"], redirectStartPage: redirectUri });
+    await msal.loginRedirect({
+      scopes: ["User.Read", "Files.Read.All"],
+      redirectStartPage: redirectUri,
+    });
   } catch (error) {
     console.error(error);
     els.loginButton.disabled = false;
