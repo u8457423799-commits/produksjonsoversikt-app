@@ -393,7 +393,8 @@ function renderOrders() {
       const hasProgress = row.planned > 0 && row.done > 0;
       return `
         <tr class="${row.isDone ? "completed-row" : ""}">
-          <td data-label="Produkt">${escapeHtml(row.Order_name || "—")}<small>Ordre ${escapeHtml(row.Order_nr || "—")}</small></td>
+          <td data-label="Produkt">${escapeHtml(row.Order_name || "—")}</td>
+          <td data-label="Ordrenr.">${escapeHtml(row.Order_nr || "—")}</td>
           <td data-label="Varenr.">${escapeHtml(row.Item_nr || "—")}</td>
           <td data-label="Gruppe"><span class="group-tag" style="color:${meta.color};background:${meta.background}">${escapeHtml(
             row.Prod_group || "—",
