@@ -326,7 +326,7 @@ button:disabled {
 .summary-card span {
   margin: 0;
   color: #7f8998;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .summary-card p {
@@ -338,7 +338,7 @@ button:disabled {
 .summary-card strong {
   display: block;
   margin: 9px 0 5px;
-  font-size: clamp(25px, 2.4vw, 36px);
+  font-size: clamp(23px, 2vw, 31px);
   letter-spacing: -0.04em;
 }
 
@@ -377,7 +377,7 @@ button:disabled {
 
 .eta-title {
   margin: 0 0 21px;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -403,18 +403,18 @@ button:disabled {
 .eta-totals small {
   margin-bottom: 8px;
   color: #707989;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .eta-totals strong {
-  font-size: clamp(24px, 2vw, 35px);
+  font-size: clamp(21px, 1.7vw, 29px);
 }
 
 .eta-totals i {
   color: #8c96a5;
-  font-size: 13px;
+  font-size: 11px;
   font-style: normal;
   font-weight: 600;
 }
@@ -423,7 +423,7 @@ button:disabled {
   min-height: 30px;
   margin: 19px 0 10px;
   color: #65a7ff;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0;
 }
 
@@ -450,8 +450,12 @@ button:disabled {
 .eta-stats small {
   margin: 0;
   color: #9ca5b2;
-  font-size: 14px;
+  font-size: 12px;
   text-transform: none;
+}
+
+.eta-stats strong {
+  font-size: 13px;
 }
 
 .eta-status {
@@ -818,7 +822,7 @@ td:first-child {
   }
 
   .summary-card strong {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .eta-stats {
