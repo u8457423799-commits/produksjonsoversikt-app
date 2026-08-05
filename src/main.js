@@ -71,6 +71,7 @@ let allData = [];
 let currentFilter = "ALL";
 let currentSearch = "";
 let refreshTimer = null;
+let selectedRowKey = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -391,8 +392,12 @@ function renderOrders() {
     .map((row) => {
       const meta = GROUP_META[row.Prod_group] || { color: "#a8a8a8", background: "#232630" };
       const hasProgress = row.planned > 0 && row.done > 0;
+      const rowKey = `${row.Order_nr || ""}::${row.Item_nr || ""}`;
+      const isSelected = selectedRowKey === rowKey;
       return `
-        <tr class="${row.isDone ? "completed-row" : ""}">
+        <tr class="${row.isDone ? "completed-row" : ""}${
+          isSelected ? " selected-row" : ""
+        }" data-row-key="${escapeHtml(rowKey)}" tabindex="0" aria-selected="${isSelected}">
           <td data-label="Produkt">${escapeHtml(row.Order_name || "—")}</td>
           <td data-label="Ordrenr.">${escapeHtml(row.Order_nr || "—")}</td>
           <td data-label="Varenr.">${escapeHtml(row.Item_nr || "—")}</td>
@@ -585,6 +590,29 @@ els.filterBar.addEventListener("click", (event) => {
 els.searchInput.addEventListener("input", (event) => {
   currentSearch = event.target.value;
   renderOrders();
+});
+
+function toggleOrderRow(row) {
+  const rowKey = row.dataset.rowKey;
+  selectedRowKey = selectedRowKey === rowKey ? null : rowKey;
+  els.ordersBody.querySelectorAll("tr[data-row-key]").forEach((candidate) => {
+    const isSelected = candidate.dataset.rowKey === selectedRowKey;
+    candidate.classList.toggle("selected-row", isSelected);
+    candidate.setAttribute("aria-selected", String(isSelected));
+  });
+}
+
+els.ordersBody.addEventListener("click", (event) => {
+  const row = event.target.closest("tr[data-row-key]");
+  if (row) toggleOrderRow(row);
+});
+
+els.ordersBody.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const row = event.target.closest("tr[data-row-key]");
+  if (!row) return;
+  event.preventDefault();
+  toggleOrderRow(row);
 });
 
 function updateClock() {
